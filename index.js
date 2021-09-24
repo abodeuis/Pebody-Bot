@@ -16,6 +16,21 @@ const client = new Client({intents: ["GUILDS", 'GUILD_VOICE_STATES', "GUILD_MESS
 client.login(token);
 const distube = new DisTube.default(client)
 
+const command_map = new Map();
+
+// Populate Commands
+{
+	command_map.set("ping",ping)
+	command_map.set("pong",pong)
+	command_map.set("echo",echo)
+	command_map.set("play",playwrapper)
+	command_map.set("stop",stopwrapper)
+	command_map.set("skip",skipwrapper)
+	command_map.set("pause",pausewrapper)
+	command_map.set("resume",resumewrapper)
+	command_map.set("seek",seekwrapper)
+}
+
 const queue = new Map();
 
 // Check every message for commands
@@ -24,51 +39,83 @@ client.on('messageCreate', async message => {
   	if (!message.content.startsWith(prefix) || message.author.bot) return;
     
   	const args = message.content.slice(prefix.length).trim().split(' ')
-  	const command = args.shift().toLowerCase()
+  	const msg_command = args.shift().toLowerCase()
 
     // Log command in console
-    log(message, `${message.member.displayName} issued command ${command}`)
+    log(message, `${message.member.displayName} issued command ${msg_command}`)
 
-  	if (command === 'ping'){
-  		pong(message);
-  	} else if (command === 'pong'){
-		ping(message);
-	} else if (command === 'echo'){
-  		echo(message);
-  	} else if (command === 'play'){
-  		distube.play(message, args.join(' '))
-  	} else if (command === 'stop'){
-  		distube.stop(message)
-  	} else if (command === 'resume'){
-  		distube.resume(message)
-	} else if (command === 'pause'){
-		distube.pause(message)
-	} else if (command === 'skip'){
-		distube.skip(message)
-  	} else if (command === 'seek'){
-  		time = timestampTomillisec(args[0])
-  		console.log(`Arg 1 :${time}`)
-
-		distube.seek(message, timestampTomillisec(args[0]))
-  	} else {
-  		message.channel.send("You entered my command prefix, but i don't recognize the command");
-  		return;
-  	}
+	// Check for command in map
+	try {
+		cmd_func = command_map.get(msg_command)
+		cmd_func(message)
+	}
+	catch (err) {
+		console.log(message, `ERROR : ${err}`)
+		// Default message
+		sendMessage(message.channel, "You entered my command prefix, but i don't recognize the command or some other unknown error occured :(", -1)
+	}
 })
 
+// ##### Command Functions #####
+function pong(message){
+	sendMessage(message.channel, "Pong", 10)
+	return;
+}
+function ping(message){
+	sendMessage(message.channel, "Ping", 10)
+	return;
+}
+function echo(message){
+	const args = message.content.slice(prefix.length).trim().split(' ')
+  	const msg_command = args.shift().toLowerCase()
+	sendMessage(message.channel, args.join(' '), 10)
+	return;
+}
+
+function playwrapper(message){
+	const args = message.content.slice(prefix.length).trim().split(' ')
+  	const msg_command = args.shift().toLowerCase()
+	distube.play(message, args.join(' '))
+}
+
+function stopwrapper(message){
+	distube.stop(message)
+}
+
+function skipwrapper(message){
+	distube.skip(message)
+}
+
+function pausewrapper(message){
+	distube.pause(message)
+}
+
+function resumewrapper(message){
+	distube.resume(message)
+}
+
+function seekwrapper(message){
+	const args = message.content.slice(prefix.length).trim().split(' ')
+  	const msg_command = args.shift().toLowerCase()
+	time = timestampToSec(args[0])
+	distube.seek(message, timestampToSec(args[0]))
+}
+
+// ##### Utility Functions #####
 function log(message, string){
-  let timestamp = new Date(message.createdTimestamp)
+  const timestamp = new Date(message.createdTimestamp)
   console.log(`[${message.guild} : ${timestamp.toLocaleDateString()} ${timestamp.toLocaleTimeString()}] ${string}`)
   console.log(`Full Message : ${message.content}`)
 }
 
-function timestampTomillisec(timestring){
+function timestampToSec(timestring){
 	const peices = timestring.split(':');
 	var minutes = Number(peices[0]);
 	var seconds = Number(peices[1]); 
-	return ((minutes*60 + seconds)*1);
+	return (minutes*60 + seconds);
 }
 
+/*
 async function play_request(message, serverQueue){
 	const args = message.content.split(" ");
 
@@ -93,19 +140,7 @@ async function play_request(message, serverQueue){
   	message.channel.send(`you wanted to play ${song.url}`)
   	return;
 }
-
-function pong(message){
-	sendMessage(message.channel, "Pong", 10)
-	return;
-}
-function ping(message){
-	sendMessage(message.channel, "Ping", 10)
-	return;
-}
-function echo(message){
-	sendMessage(message.channel, message.content, 10)
-	return;
-}
+*/
 
 // Console Logs
 client.once('ready', () => {
