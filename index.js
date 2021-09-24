@@ -46,29 +46,34 @@ client.on('messageCreate', async message => {
 
 	// Check for command in map
 	try {
-		cmd_func = command_map.get(msg_command)
-		cmd_func(message)
+		if (command_map.has(msg_command)){
+			cmd_func = command_map.get(msg_command)
+			cmd_func(message)
+		}
+		else {
+			sendMessage(message.channel, "You entered my command prefix, but i don't recognize the command", -1)
+		}
 	}
 	catch (err) {
 		console.log(message, `ERROR : ${err}`)
 		// Default message
-		sendMessage(message.channel, "You entered my command prefix, but i don't recognize the command or some other unknown error occured :(", -1)
+		sendMessage(message.channel, `ERROR : ${err} \n Well thats not good :(`, -1)
 	}
 })
 
 // ##### Command Functions #####
 function pong(message){
-	sendMessage(message.channel, "Pong", 10)
+	sendMessage(message.channel, "Pong", 30)
 	return;
 }
 function ping(message){
-	sendMessage(message.channel, "Ping", 10)
+	sendMessage(message.channel, "Ping", 30)
 	return;
 }
 function echo(message){
 	const args = message.content.slice(prefix.length).trim().split(' ')
   	const msg_command = args.shift().toLowerCase()
-	sendMessage(message.channel, args.join(' '), 10)
+	sendMessage(message.channel, args.join(' '), -1)
 	return;
 }
 
