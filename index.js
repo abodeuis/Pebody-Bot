@@ -1,23 +1,32 @@
+// Requirements
 const { Client, Intents } = require('discord.js');
 const DisTube = require('distube')
 const SoundCloudPlugin = require('@distube/soundcloud')
 const SpotifyPlugin = require('@distube/spotify')
+
+// Config
 const {
 	prefix,
 	token,
 } = require('./config.json');
 
-const client = new Client({intents: ["GUILDS", 'GUILD_VOICE_STATES', "GUILD_MESSAGES"]});
 // Connect to discord
+const client = new Client({intents: ["GUILDS", 'GUILD_VOICE_STATES', "GUILD_MESSAGES"]});
 client.login(token);
 const distube = new DisTube.default(client)
 
 const queue = new Map();
 
+// Check every message for commands
 client.on('messageCreate', async message => {
+    // Ignore non commands and bots
   	if (!message.content.startsWith(prefix) || message.author.bot) return;
+    
   	const args = message.content.slice(prefix.length).trim().split(' ')
   	const command = args.shift().toLowerCase()
+
+    // Log command in console
+    log(message, `${message.member.displayName} issued command ${command}`)
 
   	if (command === 'ping'){
   		pong(message);
@@ -45,6 +54,12 @@ client.on('messageCreate', async message => {
   		return;
   	}
 })
+
+function log(message, string){
+  let timestamp = new Date(message.createdTimestamp)
+  console.log(`[${message.guild} : ${timestamp.toLocaleDateString()} ${timestamp.toLocaleTimeString()}] ${string}`)
+  console.log(`Full Message : ${message.content}`)
+}
 
 function timestampTomillisec(timestring){
 	const peices = timestring.split(':');
