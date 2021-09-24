@@ -3,6 +3,7 @@ const { Client, Intents } = require('discord.js');
 const DisTube = require('distube')
 const SoundCloudPlugin = require('@distube/soundcloud')
 const SpotifyPlugin = require('@distube/spotify')
+const sendMessage = require('./send-message')
 
 // Config
 const {
@@ -30,10 +31,10 @@ client.on('messageCreate', async message => {
 
   	if (command === 'ping'){
   		pong(message);
-  		return;
-  	} else if (command === 'echo'){
+  	} else if (command === 'pong'){
+		ping(message);
+	} else if (command === 'echo'){
   		echo(message);
-  		return;
   	} else if (command === 'play'){
   		distube.play(message, args.join(' '))
   	} else if (command === 'stop'){
@@ -94,15 +95,15 @@ async function play_request(message, serverQueue){
 }
 
 function pong(message){
-	message.channel.send("Pong");
+	sendMessage(message.channel, "Pong", 10)
 	return;
 }
 function ping(message){
-	message.channel.send("Ping");
+	sendMessage(message.channel, "Ping", 10)
 	return;
 }
 function echo(message){
-	message.channel.send(message.content);
+	sendMessage(message.channel, message.content, 10)
 	return;
 }
 
