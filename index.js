@@ -1,8 +1,8 @@
 // Requirements
 const { Client, Intents } = require('discord.js');
 const DisTube = require('distube')
-const SoundCloudPlugin = require('@distube/soundcloud')
-const SpotifyPlugin = require('@distube/spotify')
+const { SoundCloudPlugin } = require('@distube/soundcloud')
+const { SpotifyPlugin } = require('@distube/spotify')
 const sendMessage = require('./send-message')
 
 // Config
@@ -14,15 +14,27 @@ const {
 // Connect to discord
 const client = new Client({intents: ["GUILDS", 'GUILD_VOICE_STATES', "GUILD_MESSAGES"]});
 client.login(token);
-const distube = new DisTube.default(client)
-
-const command_map = new Map();
+const distube = new DisTube.default(client,{
+	emitNewSongOnly: true,
+	plugins: [new SpotifyPlugin(), new SoundCloudPlugin()],
+	/* // If you want more then a 100 spotify songs at once you need to sign in with a client id
+	plugins: [new SpotifyPlugin({
+		parallel : true,
+		api : {
+			clientId: "",
+			clientSecret: "",
+		}
+	})],
+	*/
+});
 
 // Populate Commands
+const command_map = new Map();
 {
 	command_map.set("ping",ping)
 	command_map.set("pong",pong)
 	command_map.set("echo",echo)
+	command_map.set("p",playwrapper)
 	command_map.set("play",playwrapper)
 	command_map.set("stop",stopwrapper)
 	command_map.set("skip",skipwrapper)
@@ -30,8 +42,6 @@ const command_map = new Map();
 	command_map.set("resume",resumewrapper)
 	command_map.set("seek",seekwrapper)
 }
-
-const queue = new Map();
 
 // Check every message for commands
 client.on('messageCreate', async message => {
@@ -56,7 +66,7 @@ client.on('messageCreate', async message => {
 	}
 	catch (err) {
 		console.log(message, `ERROR : ${err}`)
-		// Default message
+		// Default m essage
 		sendMessage(message.channel, `ERROR : ${err} \n Well thats not good :(`, -1)
 	}
 })
@@ -119,33 +129,6 @@ function timestampToSec(timestring){
 	var seconds = Number(peices[1]); 
 	return (minutes*60 + seconds);
 }
-
-/*
-async function play_request(message, serverQueue){
-	const args = message.content.split(" ");
-
-	const voiceChannel = message.member.voice.channel;
-	if(!voiceChannel)
-		 return message.channel.send(
-      		"You need to be in a voice channel to play music!"
-    	);
-    const permissions = voiceChannel.permissionsFor(message.client.user);
-  	if (!permissions.has("CONNECT") || !permissions.has("SPEAK")) {
-    	return message.channel.send(
-      		"I need the permissions to join and speak in your voice channel!"
-    	);
-  	}
-
-  	const songInfo = await ytdl.getInfo(args[1]);
-  	const song = {
-    	title: songInfo.title,
-    	url: songInfo.video_url
-  	};
-
-  	message.channel.send(`you wanted to play ${song.url}`)
-  	return;
-}
-*/
 
 // Console Logs
 client.once('ready', () => {
