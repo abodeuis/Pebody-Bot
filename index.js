@@ -41,6 +41,7 @@ const command_map = new Map();
 	command_map.set("pause",pausewrapper)
 	command_map.set("resume",resumewrapper)
 	command_map.set("seek",seekwrapper)
+	command_map.set("shuffle",shufflewrapper)
 }
 
 // Check every message for commands
@@ -114,6 +115,10 @@ function seekwrapper(message){
   	const msg_command = args.shift().toLowerCase()
 	time = timestampToSec(args[0])
 	distube.seek(message, timestampToSec(args[0]))
+}
+
+function shufflewrapper(message){
+	distube.shuffle(message)
 }
 
 // ##### Utility Functions #####
