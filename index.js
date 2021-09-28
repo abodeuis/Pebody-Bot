@@ -10,6 +10,7 @@ const {
 	prefix,
 	token,
 } = require('./config.json');
+const { output_formats } = require('libsodium-wrappers');
 
 // Connect to discord
 const client = new Client({intents: ["GUILDS", 'GUILD_VOICE_STATES', "GUILD_MESSAGES"]});
@@ -42,6 +43,7 @@ const command_map = new Map();
 	command_map.set("resume",resumewrapper)
 	command_map.set("seek",seekwrapper)
 	command_map.set("shuffle",shufflewrapper)
+	command_map.set("queue",queuewrapper)
 }
 
 // Check every message for commands
@@ -88,10 +90,51 @@ function echo(message){
 	return;
 }
 
-function playwrapper(message){
+async function playwrapper(message){
 	const args = message.content.slice(prefix.length).trim().split(' ')
   	const msg_command = args.shift().toLowerCase()
 	distube.play(message, args.join(' '))
+	// #### Everything below this if just for the status msg ####
+	// Get queue state before song is added
+	let prequeue
+	try {
+		prequeue = distube.getQueue(message)
+	}
+	catch (err){
+	}
+	if (typeof prequeue == 'undefined'){
+		prequeue_length = 0
+		prequeue = {songs : {length : 0}}
+	}
+	// Get queue state after song is added
+
+	let queue
+	let queue_length = 0
+	while (prequeue_length === queue_length){
+		const garbage = await fixeddelay() // Delay is nessacary becuase distube takes awhile to actually update the queue
+		queue = distube.getQueue(message)
+		if (typeof queue == 'undefined') {
+			queue_length = 0
+		}
+		else {
+			queue_length = queue.songs.length
+		}
+		console.log(`Queue Length = ${queue_length}`)
+		console.log(`PreQueue Legnth = ${prequeue_length}`)
+	}
+
+	// Get amount of songs queued
+	songsqueued = queue.songs.length - prequeue.songs.length
+
+	// Multiple songs queued msg
+	if (songsqueued > 1){
+		sendMessage(message.channel, `Queued ${songsqueued} songs`, -1)
+	}
+	// Single song queued msg
+	else {
+		let song = queue.songs.at(-1)
+		sendMessage(message.channel, `Queued ${song.name} : ${song.url} - \`${song.formattedDuration}\``, song.duration+10)
+	}
 }
 
 function stopwrapper(message){
@@ -119,6 +162,23 @@ function seekwrapper(message){
 
 function shufflewrapper(message){
 	distube.shuffle(message)
+	let queue = distube.getQueue(message)
+	let songcount = queue.songs.length
+	sendMessage(message.channel, `Shuffled ${songcount} songs.`)
+}
+
+function queuewrapper(message){
+	let queue = distube.getQueue(message)
+	if (queue.songs.length > 5){
+		sendMessage(message.channel, `Current queue:\n` +  queue.songs.slice(0,5).map((song, id) =>
+			`**${id+1}**. ${song.name} : ${song.url} - \`${song.formattedDuration}\``
+			).join("\n") + `\nPlus and Additional ${queue.songs.length-5} songs`, 120);
+	}
+	else {
+		sendMessage(message.channel, 'Current queue:\n' + queue.songs.map((song, id) =>
+			`**${id+1}**. ${song.name} : ${song.url} - \`${song.formattedDuration}\``
+			).join("\n"), 120);
+	}
 }
 
 // ##### Utility Functions #####
@@ -126,6 +186,14 @@ function log(message, string){
   const timestamp = new Date(message.createdTimestamp)
   console.log(`[${message.guild} : ${timestamp.toLocaleDateString()} ${timestamp.toLocaleTimeString()}] ${string}`)
   console.log(`Full Message : ${message.content}`)
+}
+
+function fixeddelay() {
+	return new Promise(resolve =>{
+		setTimeout(() => {
+			resolve('resolved');
+		}, 100);
+	})
 }
 
 function timestampToSec(timestring){
