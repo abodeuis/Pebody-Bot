@@ -106,8 +106,8 @@ async function playwrapper(message){
 		prequeue_length = 0
 		prequeue = {songs : {length : 0}}
 	}
-	// Get queue state after song is added
 
+	// Get queue state after song is added
 	let queue
 	let queue_length = 0
 	while (prequeue_length === queue_length){
@@ -119,8 +119,6 @@ async function playwrapper(message){
 		else {
 			queue_length = queue.songs.length
 		}
-		console.log(`Queue Length = ${queue_length}`)
-		console.log(`PreQueue Legnth = ${prequeue_length}`)
 	}
 
 	// Get amount of songs queued
@@ -171,12 +169,12 @@ function queuewrapper(message){
 	let queue = distube.getQueue(message)
 	if (queue.songs.length > 5){
 		sendMessage(message.channel, `Current queue:\n` +  queue.songs.slice(0,5).map((song, id) =>
-			`**${id+1}**. ${song.name} : ${song.url} - \`${song.formattedDuration}\``
+			`**${id+1}**. \`${song.name} :\n ${song.url} - ${song.formattedDuration}\``
 			).join("\n") + `\nPlus and Additional ${queue.songs.length-5} songs`, 120);
 	}
 	else {
 		sendMessage(message.channel, 'Current queue:\n' + queue.songs.map((song, id) =>
-			`**${id+1}**. ${song.name} : ${song.url} - \`${song.formattedDuration}\``
+			`**${id+1}**. \`${song.name} :\n ${song.url} - ${song.formattedDuration}\``
 			).join("\n"), 120);
 	}
 }
