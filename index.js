@@ -77,7 +77,7 @@ client.on('messageCreate', async message => {
 	}
 	catch (err) {
 		console.log(message, `ERROR : ${err}`)
-		// Default m essage
+		// Default message
 		sendMessage(message.channel, `ERROR : ${err} \n Well thats not good :(`, -1)
 	}
 })
