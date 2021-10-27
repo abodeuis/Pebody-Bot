@@ -1,0 +1,5 @@
+{
+	"prefix":"+",
+	"token":"Your_bot_token",
+    "channel_id":"Target_channel_id"
+}
