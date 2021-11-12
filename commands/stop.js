@@ -1,12 +1,13 @@
 // stop.js
-const myDistube = require('../myDistube.js')
-const distube = myDistube.distubeSingleton.getInstance()[1]
+const sendMessage = require("../send-message");
 
 module.exports = {
-    name : ['stop','s'],
+    name : 'stop',
+    aliases : ['stop','s'],
     desc : 'Stops the music',
     help : '\nExample usage \`{prefix}stop\`', // Replace prefix later
     execute(message) {
-        distube.stop(message)
+        // TODO: implement Stop in ytdl version
+        sendMessage(message.channel, 'Stop not currently implemented',-1)
     }
 };

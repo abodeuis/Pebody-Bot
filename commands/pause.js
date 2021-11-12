@@ -1,12 +1,12 @@
 // pause.js
-const myDistube = require('../myDistube.js')
-const distube = myDistube.distubeSingleton.getInstance()[1]
+const sendMessage = require('../send-message')
 
 module.exports = {
-    name : ['pause'],
+    name : 'pause',
     desc : 'Pauses the currently playing song',
     help : 'Pauses the currently playing song\nExample usage \`{prefix}pause\`', // Replace prefix later
     execute(message) {
-        distube.pause(message)
+        // TODO: implement Pause in ytdl version
+        sendMessage(message.channel, 'Pause not currently implemented',-1)
     }
 };

@@ -1,12 +1,12 @@
 // skip.js
-const myDistube = require('../myDistube.js')
-const distube = myDistube.distubeSingleton.getInstance()[1]
+const sendMessage = require("../send-message");
 
 module.exports = {
-    name : ['skip'],
+    name : 'skip',
     desc : 'Skips the currently playing track.',
     help : 'Skips to the next song in the queue\nExample usage \`{prefix}skip\`', // Replace prefix later
     execute(message) {
-        distube.skip(message)
+        // TODO: implement Skip in ytdl version
+        sendMessage(message.channel, 'Skip not currently implemented',-1)
     }
 };

@@ -3,7 +3,7 @@ const sendMessage = require('../send-message')
 const {	prefix, } = require('../config.json');
 
 module.exports = {
-    name : ['echo'],
+    name : 'echo',
     desc : 'Replies with the any text after the command',
     help : 'Replies with the any text after the command.\nExample usage \`{prefix}echo This is the text I want pebody to say\`', // Replace prefix later
     execute(message) {

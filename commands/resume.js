@@ -1,12 +1,13 @@
 // resume.js
-const myDistube = require('../myDistube.js')
-const distube = myDistube.distubeSingleton.getInstance()[1]
+const sendMessage = require('../send-message')
 
 module.exports = {
-    name : ['resume','unpause'],
+    name : 'resume',
+    aliases : ['resume','unpause'],
     desc : 'Resumes playback',
     help : 'Resumes playing a song if there was one paused\nExample usage \`{prefix}resume\`', // Replace prefix later
     execute(message) {
-        distube.resume(message)
+        // TODO: implement Resume in ytdl version
+        sendMessage(message.channel, 'Resume not currently implemented',-1)
     }
 };

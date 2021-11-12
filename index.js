@@ -14,14 +14,22 @@ const command_map = new Map();
 console.log(`Loading with ${commandFiles.length} commands :`)
 for (const file of commandFiles){
 	const cmd = require(`./commands/${file}`);
-	for (i = 0; i < cmd.aliases.length; i++){
-		console.log(`\t${cmd.name} as \'${cmd.aliases[i]}\'`)
-		command_map.set(cmd.aliases[i], cmd)
+	// Add all aliases if they exist
+	if (typeof cmd.aliases !== 'undefined'){
+		for (i = 0; i < cmd.aliases.length; i++){
+			console.log(`\t${cmd.name} as \'${cmd.aliases[i]}\'`)
+			command_map.set(cmd.aliases[i], cmd)
+		}
+	}
+	// If aliases doesn't exist add by name
+	else {
+		console.log(`\t${cmd.name}`)
+		command_map.set(cmd.name, cmd)
 	}
 }
 // Add help command here as it needs access to the command_map and i dont know how to scope that correctly
 const help_wrapper = {
-	name : ['help'],
+	name : 'help',
     desc : 'Provides Usage information about the avaliable commands',
     help : 'Example usage \`{prefix}help\`', // Replace prefix later
     execute(message) {

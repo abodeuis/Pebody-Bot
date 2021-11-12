@@ -1,9 +1,21 @@
 // queue.js
 const sendMessage = require('../send-message')
-const myDistube = require('../myDistube.js')
-const distube = myDistube.distubeSingleton.getInstance()[1]
 
-const test_a = {
+var test_a, test_b;
+
+module.exports = {
+    name : 'queue',
+    aliases : ['queue','q'],
+    desc : 'Displays the queue in chat',
+    help : 'Displays the queue in chat\nExample usage \`{prefix}queue\`', // Replace prefix later
+    tests : [test_a, test_b],
+    execute(message) {
+        // TODO: implement Queue in ytdl version
+        sendMessage(message.channel, 'Queue not currently implemented',-1)
+    }
+};
+
+test_a = {
     name : 'example test true',
     expected_result : '', 
     execute(test_channel){
@@ -12,7 +24,7 @@ const test_a = {
     }
 }
 
-const test_b = {
+test_b = {
     name : 'example test false',
     expected_result : '', 
     execute(test_channel){
@@ -20,24 +32,3 @@ const test_b = {
         return false
     }
 }
-
-module.exports = {
-    name : ['queue','q'],
-    desc : 'Displays the queue in chat',
-    help : 'Displays the queue in chat\nExample usage \`{prefix}queue\`', // Replace prefix later
-    tests : [test_a, test_b],
-    execute(message) {
-        let queue = distube.getQueue(message)
-        if (queue.songs.length > 5){
-            sendMessage(message.channel, `Current queue:\n` +  queue.songs.slice(0,5).map((song, id) =>
-                `**${id+1}**. \`${song.name} :\n ${song.url} - ${song.formattedDuration}\``
-                ).join("\n") + `\nPlus and Additional ${queue.songs.length-5} songs`, 120);
-        }
-        else {
-            sendMessage(message.channel, 'Current queue:\n' + queue.songs.map((song, id) =>
-                `**${id+1}**. \`${song.name} :\n ${song.url} - ${song.formattedDuration}\``
-                ).join("\n"), 120);
-	    }
-    }
-};
-
