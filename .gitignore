@@ -1,3 +1,4 @@
 # ignore node directory
 node_modules/
 package-lock.json
+config.json
