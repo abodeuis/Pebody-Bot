@@ -1,28 +1,24 @@
-// Requirements
+// External Package Requirements
 const fs = require('fs');
-const myDistube = require('./myDistube.js')
-const clients = myDistube.distubeSingleton.getInstance()
-const client = clients[0]
-const distube = clients[1]
-
 // Internal Files
 const sendMessage = require('./send-message')
+const Client = require('./client.js')
 
-// Config
-const {prefix,token,} = require('./config.json');
-const { send } = require('process');
+// Load global variables
+const client = Client.Singleton.getInstance()
+const { prefix, } = require('./config.json');
 
 // Load Commands from commands directory
 const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
 const command_map = new Map();
+console.log(`Loading with ${commandFiles.length} commands :`)
 for (const file of commandFiles){
 	const cmd = require(`./commands/${file}`);
-	for (i = 0; i < cmd.name.length; i++){
-		console.log(cmd.name)
-		command_map.set(cmd.name[i], cmd)
+	for (i = 0; i < cmd.aliases.length; i++){
+		console.log(`\t${cmd.name} as \'${cmd.aliases[i]}\'`)
+		command_map.set(cmd.aliases[i], cmd)
 	}
 }
-
 // Add help command here as it needs access to the command_map and i dont know how to scope that correctly
 const help_wrapper = {
 	name : ['help'],
@@ -54,13 +50,20 @@ const help_wrapper = {
 }
 command_map.set('help', help_wrapper)
 
-// Check every message for commands
+// Main Function. Activates whenever a message is posted in any channel it has access to
 client.on('messageCreate', async message => {
     // Ignore non commands and bots
   	if (!message.content.startsWith(prefix) || message.author.bot) return;
-    
+	
   	const args = message.content.slice(prefix.length).trim().split(' ')
   	const msg_command = args.shift().toLowerCase()
+
+	// Check requirements for using the command
+	
+	// Ignore if user is not in a voice channel
+	//const voice_channel = message.member.voice.channel;
+	//if (!voice_channel){sendMessage(message.channel, "You need to be in a voice channel to execute this command")}
+    // Check permissions for command
 
     // Log command in console
     log(message, `${message.member.displayName} issued command ${msg_command}`)
@@ -91,9 +94,9 @@ function log(message, string){
 
 // Console Logs
 client.once('ready', () => {
- console.log(`Ready with ${command_map.size} commands loaded :`)
+ //console.log(`Ready with ${command_map.size} commands loaded :`)
  for (const [key, value] of command_map.entries()) {
-	 console.log(`\t${key}`)
+	 //console.log(`\t${key}`)
  }
  console.log('Logged In!');
 });
