@@ -66,23 +66,31 @@ client.on('messageCreate', async message => {
   	const args = message.content.slice(prefix.length).trim().split(' ')
   	const msg_command = args.shift().toLowerCase()
 
-	// Check requirements for using the command
-	
-	// Ignore if user is not in a voice channel
-	//const voice_channel = message.member.voice.channel;
-	//if (!voice_channel){sendMessage(message.channel, "You need to be in a voice channel to execute this command")}
-    // Check permissions for command
-
     // Log command in console
     log(message, `${message.member.displayName} issued command ${msg_command}`)
 
 	// Check for command in map
 	try {
 		if (command_map.has(msg_command)){
-			cmd_func = command_map.get(msg_command)
-			cmd_func.execute(message)
+			// Get command
+			cmd = command_map.get(msg_command)
+
+			// Check requirements for using the command
+			if (typeof cmd.requirements !== 'undefined'){
+				// User in voice
+				if (cmd.requirements.includes('user_in_voice_channel')){
+					if (!message.member.voice.channel){
+						sendMessage(message.channel, `You need to be in a voice channel to use ${msg_command} command!`, 30)
+						return;
+					}
+				}
+			}
+
+			// Execute the command
+			cmd.execute(message)
 		}
 		else {
+			// Command wasn't in Map
 			sendMessage(message.channel, "You entered my command prefix, but i don't recognize the command", -1)
 		}
 	}
