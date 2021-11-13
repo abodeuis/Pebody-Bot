@@ -8,5 +8,7 @@ module.exports = {
     execute(message) {
         // TODO: implement Pause in ytdl version
         sendMessage(message.channel, 'Pause not currently implemented',-1)
+        var guild_manager = guilds_map.get(message.guild.id);
+        guild_manager.player.pause();
     }
 };

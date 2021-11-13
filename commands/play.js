@@ -2,14 +2,13 @@
 // External Package Requirements
 const ytdl = require('ytdl-core');
 const ytSearch = require('yt-search');
-const { joinVoiceChannel, entersState, VoiceConnectionStatus } = require('@discordjs/voice'); //voice thingy
 
 // Internal Files
 const sendMessage = require('../send-message')
 const utilities = require('../utilities')
 const {	prefix, } = require('../config.json');
 const guildsMap = require('../guildsMap.js');
-const { VoiceChannel } = require('discord.js');
+const guildManager = require('../guildManager.js');
 
 // Load global variables
 const server_map = guildsMap.Singleton.getInstance()
@@ -42,7 +41,7 @@ module.exports = {
                 return (videoResult.videos.length > 1) ? videoResult.videos[0] : null;
             }
 
-            const video = await video_finder(args.join(' '))
+            const video = await video_finder(args.join(' '));
             if (video){
                 song = {title : video.title, url : video.url}
             } else {
@@ -50,51 +49,27 @@ module.exports = {
             }
         }
 
-        guild_queue = server_map.get(message.guild.id)
-        // Construct queue if it doesn't exist yet
-        if (!guild_queue){
-            // Create guild queue
-            const guild_queue = {
-                voice_channel : message.member.voice.channel,
-                text_channel : message.channel,
-                connection : null,
-                songs : []
-            }
-
-            server_map.set(message.guild.id, guild_queue);
-            guild_queue.songs.push(song)
-
-            try {
-                guild_queue.connection = await connectToChannel(message.member.voice.channel);
-                video_player(message.guild, guild_queue.songs[0])
-            } catch (err) {
-                server_map.delete(message.guild.id);
-                message.channel.send('Delete queue error')
-                throw err;
-            }
+        guild_manager = server_map.get(message.guild.id)
+        // Construct manager if it doesn't exist yet
+        if (!guild_manager){
+            guild_manager = new guildManager(message);
+            server_map.set(message.guild.id, guild_manager);
         }
-        else {
-            guild_queue.songs.push(song);
-            sendMessage(`song ${song.title} added to queue`)
+        // Add song to queue
+        guild_manager.song_queue.push(song)
+        // Connect to channel if its not all ready active
+        if (guild_manager.connection === null){
+            guild_manager.connectToChannel(message.member.voice.channel);
         }
+        console.log(guild_manager.player.state.status)
+        //
+        if (guild_manager.player.state.status === 'idle'){
+            guild_manager.play_songs();
+        }
+        
+        sendMessage(guild_manager.text_channel, `song ${song.title} added to queue`)    
     }
 };
-
-async function connectToChannel(channel){
-    const connection = joinVoiceChannel({
-        channelId: channel.id,
-        guildId: channel.guild.id,
-        adapterCreator: channel.guild.voiceAdapterCreator
-    });
-
-    try {
-        await entersState(connection, VoiceConnectionStatus.Ready, 30e3);
-        return connection;
-    } catch (err){
-        connection.destroy();
-        throw error;
-    }
-}
 
 const video_player = async (guild, song) => {
     const song_queue = server_map.get(guild.id);
@@ -102,6 +77,7 @@ const video_player = async (guild, song) => {
     if (!song){
         song_queue.voice_channel.leave();
         server_map.delete(guild.id);
+        return;
     }
 
     const stream = ytdl(song.url, {filter:'audioonly'});
