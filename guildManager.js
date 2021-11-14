@@ -1,7 +1,9 @@
 // guildManager.js
 // External Package Requirements
+const fs = require('fs');
 const ytdl = require('ytdl-core');
-const {createAudioPlayer, createAudioResource, joinVoiceChannel, VoiceConnectionStatus, entersState} = require('@discordjs/voice');
+const ytdlexec = require('youtube-dl-exec').raw;
+const {createAudioPlayer, createAudioResource, joinVoiceChannel, VoiceConnectionStatus, entersState, AudioPlayerStatus} = require('@discordjs/voice');
 // Internal Files
 const sendMessage = require('./send-message')
 const { format_duration } = require('./utilities.js')
@@ -31,7 +33,7 @@ class guildManager {
             adapterCreator: channel.guild.voiceAdapterCreator
         })
         this.connection.on(VoiceConnectionStatus.Ready, () => {
-            console.log(`${this.guild} connection is ready`)
+            //console.log(`${this.guild} connection is ready`)
         });
         this.connection.on(VoiceConnectionStatus.Disconnected, async (oldState, newState) => {
             try {
@@ -57,6 +59,14 @@ class guildManager {
 
         // Setup the player to play to this connection
         this.connection.subscribe(this.player)
+
+        this.player.on('error', error => {
+            console.log(`Error at ${this.current_audio.playbackDuration}`)
+            console.log(`Error: ${error.message} with resource`);
+            console.log(error.resource)
+            this.song_queue[0].seek = this.current_audio.playbackDuration;
+            this.play_songs();
+        })
     }
 
     async play_songs(){
@@ -65,20 +75,29 @@ class guildManager {
 
         // Song queue is done
         if (!this.song_queue[0]){
-            this.connection.destroy();
+            if (this.connection){
+                this.connection.destroy();
+                this.connection = null;
+            }
             sendMessage(this.text_channel,`Done playing queue`)
             return;
         }
 
-        const stream = ytdl(this.song_queue[0].url, {filter:'audioonly'});
-        this.current_audio = createAudioResource(stream, {seek: this.song_queue[0].seek, volume: this.volume})
+        // Download the Song to cache
+        //const stream = ytdl(this.song_queue[0].url, {filter:'audioonly', quality: 'highestaudio'});
+        const stream = ytdlexec(this.song_queue[0].url, {o:'-',q:'',f:'bestaudio[ext=webm+acodec=opus+asr=48000]/bestaudio',r: '100K',}, {stdio: ['ignore', 'pipe', 'ignore']})
+        stream.on("error", (err) => {
+            console.log("ytdl error\n", err);
+        });
+        
+        console.log(`Trying to seek to ${format_duration(this.song_queue[0].seek)}`)
+        this.current_audio = createAudioResource(stream.stdout, {seek: Number(this.song_queue[0].seek), volume: this.volume})
+        this.current_audio.playStream.on('finish', () => {
+            this.song_queue.shift();
+            this.play_songs();          
+        });
         this.setNowPlayingMsg();
         this.player.play(this.current_audio);
-        //.on('finish', () => {
-        //    this.song_queue.shift();
-        //    this.play_songs();
-        //});
-        
     }
 
     setNowPlayingMsg(){

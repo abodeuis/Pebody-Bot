@@ -9,9 +9,24 @@ function fixeddelay() {
 
 function timestampToSec(timestring){
 	const peices = timestring.split(':');
-	var minutes = Number(peices[0]);
-	var seconds = Number(peices[1]); 
-	return (minutes*60 + seconds);
+	console.log(peices)
+	var hours = 0;
+	var minutes = 0;
+	var seconds = 0;
+	if (peices > 3){
+		console.log(`To many args in timestamp`)
+	} else if (peices.length == 3){
+		hours = Number(peices[0])
+		minutes = Number(peices[1]);
+		seconds = Number(peices[2]);
+	} else if (peices.length == 2){
+		minutes = Number(peices[0]);
+		seconds = Number(peices[1]);
+	} else if (peices.length == 1 ){
+		seconds = Number(peices[0]);
+	}
+	
+	return (hours*3600 + minutes*60 + seconds);
 }
 
 function format_duration(seconds){

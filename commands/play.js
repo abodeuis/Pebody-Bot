@@ -17,7 +17,7 @@ module.exports = {
     name : 'play',
     aliases : ['p'],
     desc : 'Adds a song to the queue; If there is no song playing, it will start playing',
-    help : 'Accepts YouTube, Spotify or Soundcloud links as well as text. If given text will search YouTube for that title.\nExample usage \`{prefix}ping\`', // Replace prefix later
+    help : 'Accepts YouTube links as well as text. If given text will search YouTube for that title.\nExample usage \`{prefix}ping\`', // Replace prefix later
     requirements : ['user_in_voice_channel'],
     async execute(message) {
         const args = message.content.slice(prefix.length).trim().split(' ');
@@ -29,6 +29,9 @@ module.exports = {
             return;
         }
 
+        // TODO: Needs Sanity check on the url
+        // 1. for playlists
+        // 2. for supported websites
         // Check if arg is a valid url
         if(ytdl.validateURL(args[0])){
             const song_info = await ytdl.getInfo(args[0]);
@@ -62,10 +65,11 @@ module.exports = {
             guild_manager.connectToChannel(message.member.voice.channel);
         }
         // Only tell the player to start playing if its not active
-        if (guild_manager.player.state.status === 'idle'){
+        if (guild_manager.player.state.status === 'idle' || guild_manager.player.state.status === 'autopaused'){
             guild_manager.play_songs();
         }
         else { // send the added to queue msg when they player is already active
+            //console.log(`Player State : ${guild_manager.player.state.status}`);
             sendMessage(guild_manager.text_channel, `Added \"${song.title}\" : ${song.url} - ${format_duration(song.duration)} to queue`, -1)
         }     
     }
