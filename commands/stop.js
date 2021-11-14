@@ -19,6 +19,7 @@ module.exports = {
         }
         // Stop the player and clear the queue
         guild_manager.player.stop();
+        guild_manager.clearNowPlayingMsg();
         guild_manager.song_queue = [];
     }
 };

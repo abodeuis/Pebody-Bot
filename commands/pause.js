@@ -17,6 +17,7 @@ module.exports = {
             return;
         }
         // Pause the player
+        guild_manager.clearNowPlayingMsg();
         guild_manager.player.pause();
     }
 };
