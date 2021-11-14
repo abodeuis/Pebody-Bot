@@ -15,7 +15,7 @@ const server_map = guildsMap.Singleton.getInstance()
 
 module.exports = {
     name : 'play',
-    aliases : ['play','p'],
+    aliases : ['p'],
     desc : 'Adds a song to the queue; If there is no song playing, it will start playing',
     help : 'Accepts YouTube, Spotify or Soundcloud links as well as text. If given text will search YouTube for that title.\nExample usage \`{prefix}ping\`', // Replace prefix later
     requirements : ['user_in_voice_channel'],

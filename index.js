@@ -14,17 +14,15 @@ const command_map = new Map();
 console.log(`Loading with ${commandFiles.length} commands :`)
 for (const file of commandFiles){
 	const cmd = require(`./commands/${file}`);
-	// Add all aliases if they exist
+	// Add main command call
+	command_map.set(cmd.name, cmd)
+	console.log(`\t${cmd.name}`)
+	// Add aliases if they exist
 	if (typeof cmd.aliases !== 'undefined'){
 		for (i = 0; i < cmd.aliases.length; i++){
-			console.log(`\t${cmd.name} as \'${cmd.aliases[i]}\'`)
+			console.log(`\t${cmd.name} aliased as \'${cmd.aliases[i]}\'`)
 			command_map.set(cmd.aliases[i], cmd)
 		}
-	}
-	// If aliases doesn't exist add by name
-	else {
-		console.log(`\t${cmd.name}`)
-		command_map.set(cmd.name, cmd)
 	}
 }
 // Add help command here as it needs access to the command_map and i dont know how to scope that correctly
@@ -36,7 +34,27 @@ const help_wrapper = {
 		const args = message.content.slice(prefix.length).trim().split(' ')
 
 		if (args.length < 2){
-			sendMessage(message.channel,`Default help message`, -1)
+			helpstr = 'Avaliable Commands : [] indicates an alias\n';
+			for (let [key, cmd] of command_map){
+				// Skip aliases as we don't want them to display as full commands
+				if (typeof cmd.aliases !== 'undefined' && cmd.aliases.includes(key)){
+					continue;
+				}
+				// Add the cmds name
+				helpstr += `\t${cmd.name}`
+				// If a command has aliases display them
+				if (typeof cmd.aliases !== 'undefined'){
+					helpstr += ' ['
+					for (i = 0; i < cmd.aliases.length; i++){
+						helpstr += `${cmd.aliases[i]},`
+					}
+					helpstr = helpstr.slice(0, helpstr.length - 1) // remove trailing ,
+					helpstr += ']'
+				}
+				// Add the cmds descriptoin
+				helpstr += ` : ${cmd.desc}\n`
+			}
+			sendMessage(message.channel,helpstr, -1)
 		}
 		else {
 			try {
@@ -66,11 +84,11 @@ client.on('messageCreate', async message => {
   	const args = message.content.slice(prefix.length).trim().split(' ')
   	const msg_command = args.shift().toLowerCase()
 
-    // Log command in console
+    // Log message in console
     log(message, `${message.member.displayName} issued command ${msg_command}`)
 
-	// Check for command in map
 	try {
+		// Check for command in map
 		if (command_map.has(msg_command)){
 			// Get command
 			cmd = command_map.get(msg_command)

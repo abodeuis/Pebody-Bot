@@ -11,7 +11,7 @@ var test_a, test_b;
 
 module.exports = {
     name : 'queue',
-    aliases : ['queue','q'],
+    aliases : ['q'],
     desc : 'Displays the queue in chat',
     help : 'Displays the queue in chat\nExample usage \`{prefix}queue\`', // Replace prefix later
     tests : [test_a, test_b],

@@ -5,7 +5,7 @@ const guilds_map = guildsMap.Singleton.getInstance()
 
 module.exports = {
     name : 'resume',
-    aliases : ['resume','unpause'],
+    aliases : ['unpause'],
     desc : 'Resumes playback',
     help : 'Resumes playing a song if there was one paused\nExample usage \`{prefix}resume\`', // Replace prefix later
     execute(message) {

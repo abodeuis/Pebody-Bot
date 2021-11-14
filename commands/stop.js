@@ -7,7 +7,7 @@ const server_map = guildsMap.Singleton.getInstance()
 
 module.exports = {
     name : 'stop',
-    aliases : ['stop','s'],
+    aliases : ['s'],
     desc : 'Stops the music',
     help : '\nExample usage \`{prefix}stop\`', // Replace prefix later
     execute(message) {
