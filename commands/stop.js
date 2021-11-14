@@ -1,7 +1,7 @@
 // stop.js
+// Internal Files
 const sendMessage = require("../send-message");
 const guildsMap = require('../guildsMap.js');
-
 // Load global variables
 const server_map = guildsMap.Singleton.getInstance()
 
@@ -20,8 +20,5 @@ module.exports = {
         // Stop the player and clear the queue
         guild_manager.player.stop();
         guild_manager.song_queue = [];
-
-        // TODO: implement Stop in ytdl version
-        //sendMessage(message.channel, 'Stop not currently implemented',-1)
     }
 };

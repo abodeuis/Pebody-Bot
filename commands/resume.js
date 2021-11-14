@@ -1,7 +1,9 @@
 // resume.js
+// Internal Files
 const sendMessage = require('../send-message')
 const guildsMap = require('../guildsMap.js');
-const guilds_map = guildsMap.Singleton.getInstance()
+// Load global variables
+const server_map = guildsMap.Singleton.getInstance()
 
 module.exports = {
     name : 'resume',
@@ -9,9 +11,12 @@ module.exports = {
     desc : 'Resumes playback',
     help : 'Resumes playing a song if there was one paused\nExample usage \`{prefix}resume\`', // Replace prefix later
     execute(message) {
-        // TODO: implement Resume in ytdl version
-        sendMessage(message.channel, 'Resume not currently implemented',-1)
-        var guild_manager = guilds_map.get(message.guild.id);
+        var guild_manager = server_map.get(message.guild.id);
+        if (!guild_manager || guild_manager.song_queue.length == 0){
+            sendMessage(message.channel, 'There is nothing currently in the queue.', 30);
+            return;
+        }
+        // unpause
         guild_manager.player.unpause();
     }
 };

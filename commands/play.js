@@ -5,7 +5,7 @@ const ytSearch = require('yt-search');
 
 // Internal Files
 const sendMessage = require('../send-message')
-const utilities = require('../utilities')
+const { format_duration } = require('../utilities')
 const {	prefix, } = require('../config.json');
 const guildsMap = require('../guildsMap.js');
 const guildManager = require('../guildManager.js');
@@ -25,25 +25,25 @@ module.exports = {
         
         // Check for args to play
 	    if (args.length < 1){
-            sendMessage(message.channel, `You didn't give me anything to play`, -1);
+            sendMessage(message.channel, `You didn't give me anything to play`, 60);
             return;
         }
 
         // Check if arg is a valid url
         if(ytdl.validateURL(args[0])){
             const song_info = await ytdl.getInfo(args[0]);
-            song = {title : song_info.videoDetails.title, url: song_info.videoDetails.video_url }
+            song = {title : song_info.videoDetails.title, url: song_info.videoDetails.video_url, duration: song_info.videoDetails.lengthSeconds, seek : 0 }
         } 
         // Search for args if it isn't a url
         else {
-            const video_finder = async (query) =>{
+            const video_finder = async (query) => {
                 const videoResult = await ytSearch(query);
                 return (videoResult.videos.length > 1) ? videoResult.videos[0] : null;
             }
 
             const video = await video_finder(args.join(' '));
             if (video){
-                song = {title : video.title, url : video.url}
+                song = {title : video.title, url : video.url, duration : video.seconds, seek : 0}
             } else {
                 sendMessage(message.channel, `error finding video`, -1);
             }
@@ -61,13 +61,13 @@ module.exports = {
         if (guild_manager.connection === null){
             guild_manager.connectToChannel(message.member.voice.channel);
         }
-        console.log(guild_manager.player.state.status)
-        //
+        // Only tell the player to start playing if its not active
         if (guild_manager.player.state.status === 'idle'){
             guild_manager.play_songs();
         }
-        
-        sendMessage(guild_manager.text_channel, `song ${song.title} added to queue`)    
+        else { // send the added to queue msg when they player is already active
+            sendMessage(guild_manager.text_channel, `Added \"${song.title}\" : ${song.url} - ${format_duration(song.duration)} to queue`, -1)
+        }     
     }
 };
 

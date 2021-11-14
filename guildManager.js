@@ -4,14 +4,19 @@ const ytdl = require('ytdl-core');
 const {createAudioPlayer, createAudioResource, joinVoiceChannel, VoiceConnectionStatus, entersState} = require('@discordjs/voice');
 // Internal Files
 const sendMessage = require('./send-message')
+const { format_duration } = require('./utilities.js')
 
 class guildManager {
     constructor(message){
+        // Guild Information
         this.guild = message.guild;
         this.voice_channel = message.member.voice.channel;
         this.text_channel = message.channel;
         this.connection = null;
+        // Audio Information
         this.player = createAudioPlayer();
+        this.current_audio = null;
+        this.volume = 0.5;
         this.song_queue = [];
     }
 
@@ -45,7 +50,7 @@ class guildManager {
         }
         catch {
             this.connection.destroy();
-            sendMessage(this.text_channel,`Error Connecting to voice channel`) 
+            sendMessage(this.text_channel,`Error Connecting to voice channel`, -1) 
             throw error;
         }
 
@@ -60,12 +65,15 @@ class guildManager {
         }
 
         const stream = ytdl(this.song_queue[0].url, {filter:'audioonly'});
-        this.player.play(createAudioResource(stream, {seek: 0, volume: 0.5}))
+        console.log(`now seeking to ${this.song_queue[0].seek}`)
+        this.current_audio = createAudioResource(stream, {seek: this.song_queue[0].seek, volume: this.volume})
+        sendMessage(this.text_channel, `Now playing \"${this.song_queue[0].title}\" : ${this.song_queue[0].url} - ${format_duration(this.song_queue[0].duration)}`);
+        this.player.play(this.current_audio);
         //.on('finish', () => {
         //    this.song_queue.shift();
         //    this.play_songs();
         //});
-        sendMessage(this.text_channel, 'now playing a song');
+        
     }
 
     destroy(){
