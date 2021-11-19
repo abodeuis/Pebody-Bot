@@ -29,6 +29,9 @@ module.exports = {
             return;
         }
 
+        //
+        var song
+
         // TODO: Needs Sanity check on the url
         // 1. for playlists
         // 2. for supported websites
@@ -36,7 +39,7 @@ module.exports = {
         if(ytdl.validateURL(args[0])){
             const song_info = await ytdl.getInfo(args[0]);
             song = {title : song_info.videoDetails.title, url: song_info.videoDetails.video_url, duration: song_info.videoDetails.lengthSeconds, seek : 0 }
-        } 
+        }
         // Search for args if it isn't a url
         else {
             const video_finder = async (query) => {
@@ -49,6 +52,7 @@ module.exports = {
                 song = {title : video.title, url : video.url, duration : video.seconds, seek : 0}
             } else {
                 sendMessage(message.channel, `error finding video`, -1);
+                return;
             }
         }
 
@@ -59,6 +63,7 @@ module.exports = {
             server_map.set(message.guild.id, guild_manager);
         }
         // Add song to queue
+        console.log(`Adding ${song.title} to queue`);
         guild_manager.song_queue.push(song)
         // Connect to channel if its not all ready active
         if (guild_manager.connection === null){

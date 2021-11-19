@@ -94,6 +94,7 @@ class guildManager {
         this.current_audio = createAudioResource(stream.stdout, {seek: Number(this.song_queue[0].seek), volume: this.volume})
         this.current_audio.playStream.on('finish', () => {
             this.song_queue.shift();
+            this.current_audio = null;
             this.play_songs();          
         });
         this.setNowPlayingMsg();
