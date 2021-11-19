@@ -5,7 +5,6 @@ const fs = require('fs');
 module.exports = {
     Singleton : (function () {
         var _instance;
-        var _loading;
 
         function _createCommandMap(){
             const instance = new Map();

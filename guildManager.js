@@ -90,7 +90,7 @@ class guildManager {
             console.log("ytdl error\n", err);
         });
         
-        console.log(`Trying to seek to ${format_duration(this.song_queue[0].seek)}`)
+        //console.log(`Trying to seek to ${format_duration(this.song_queue[0].seek)}`)
         this.current_audio = createAudioResource(stream.stdout, {seek: Number(this.song_queue[0].seek), volume: this.volume})
         this.current_audio.playStream.on('finish', () => {
             this.song_queue.shift();

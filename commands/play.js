@@ -1,6 +1,7 @@
 // play.js
 // External Package Requirements
 const ytdl = require('ytdl-core');
+const ytpl = require('ytpl');
 const ytSearch = require('yt-search');
 
 // Internal Files
@@ -20,7 +21,7 @@ module.exports = {
     help : 'Accepts YouTube links as well as text. If given text will search YouTube for that title.\nExample usage \`{prefix}ping\`', // Replace prefix later
     requirements : ['user_in_voice_channel'],
     async execute(message) {
-        const args = message.content.slice(prefix.length).trim().split(' ');
+        const args = message.content.split(' ');
   	    args.shift(); // remove the command part of the msg
         
         // Check for args to play
@@ -29,18 +30,46 @@ module.exports = {
             return;
         }
 
-        //
-        var song
+        // ##### Resolve the provided args to a URL(s) #####
+        var song_requests = [];
 
-        // TODO: Needs Sanity check on the url
-        // 1. for playlists
-        // 2. for supported websites
-        // Check if arg is a valid url
+        // Check for spotify URL
+        if(args[0].startsWith("https://open.spotify.com")){
+            sendMessage(message.channel, `Spotify links are not supported, but are planned to be supported in the future`, -1);
+            return;
+        }
+        // Check for soundcloud URL
+        if(args[0].startsWith("https://soundcloud.com")){
+            sendMessage(message.channel, `Soundcloud links are not supported, but are planned to be supported in the future`, -1);
+            return;
+        }
+        // Check for Youtube video URL
         if(ytdl.validateURL(args[0])){
             const song_info = await ytdl.getInfo(args[0]);
-            song = {title : song_info.videoDetails.title, url: song_info.videoDetails.video_url, duration: song_info.videoDetails.lengthSeconds, seek : 0 }
+            song_requests.push({title : song_info.videoDetails.title, url: song_info.videoDetails.video_url, duration: song_info.videoDetails.lengthSeconds, seek : 0 })
         }
-        // Search for args if it isn't a url
+        // Check for Youtube playlist URL
+        // Need to figure out a better way to check for youtube playlist links!
+        else if(args[0].startsWith("https")){
+            // Get playlistID returns an exception of no id found if there isn't a valid playlist for the url
+            try {
+                const playlistid = await ytpl.getPlaylistID(args[0])
+                const playlistQuery = await ytpl(playlistid, {pages : 10}) // 10 Pages will return a max of a 100 videos
+                for (let i in playlistQuery.items){
+                    // Validate will make sure that we can get the url as private videos might be in playlists
+                    if(ytdl.validateURL(playlistQuery.items[i].shortUrl)){
+                        const song_info = await ytdl.getInfo(playlistQuery.items[i].shortUrl);
+                        song_requests.push({title : song_info.videoDetails.title, url: song_info.videoDetails.video_url, duration: song_info.videoDetails.lengthSeconds, seek : 0 })
+                    }
+                }
+            }
+            catch (err) {
+                console.log(`WARNING : Could not resolve ${args[0]} to a video`)
+                sendMessage(message.channel, `Could not resolve the URL to a video (video type may not be supported)`, -1);
+                return;
+            }
+        }
+        // Search Youtube for args as a string if it isn't a url
         else {
             const video_finder = async (query) => {
                 const videoResult = await ytSearch(query);
@@ -49,50 +78,50 @@ module.exports = {
 
             const video = await video_finder(args.join(' '));
             if (video){
-                song = {title : video.title, url : video.url, duration : video.seconds, seek : 0}
+                song_requests.push({title : video.title, url : video.url, duration : video.seconds, seek : 0})
             } else {
-                sendMessage(message.channel, `error finding video`, -1);
+                console.log(`WARNING : Could not find video for ${args[0]}`)
+                sendMessage(message.channel, `Could not find a video`, -1);
                 return;
             }
         }
 
+        // ##### Submit the song to the Guild Manager #####
         guild_manager = server_map.get(message.guild.id)
         // Construct manager if it doesn't exist yet
         if (!guild_manager){
             guild_manager = new guildManager(message);
             server_map.set(message.guild.id, guild_manager);
         }
-        // Add song to queue
-        console.log(`Adding ${song.title} to queue`);
-        guild_manager.song_queue.push(song)
-        // Connect to channel if its not all ready active
+        // Add songs to queue
+        for (let i in song_requests){
+            console.log(`\tAdding ${song_requests[i].title} to queue`);
+            guild_manager.song_queue.push(song_requests[i])
+        }
+
+        // ##### Start playback of the song queue #####
+        // Connect to channel if its not connected
         if (guild_manager.connection === null){
             guild_manager.connectToChannel(message.member.voice.channel);
         }
-        // Only tell the player to start playing if its not active
+        // Tell the player to start playback if its not active
         if (guild_manager.player.state.status === 'idle' || guild_manager.player.state.status === 'autopaused'){
             guild_manager.play_songs();
+            // If more then one song is added also send the added to queue msg
+            if (song_requests.length > 1){
+                sendMessage(guild_manager.text_channel, `Added an additional ${song_requests.length} songs from playlist ${args[0]} to the queue`, -1)
+            }
         }
-        else { // send the added to queue msg when they player is already active
-            //console.log(`Player State : ${guild_manager.player.state.status}`);
-            sendMessage(guild_manager.text_channel, `Added \"${song.title}\" : ${song.url} - ${format_duration(song.duration)} to queue`, -1)
+        // Send the added to queue msg if the player is already active
+        else {
+            // Playlist was added
+            if (song_requests.length > 1){
+                sendMessage(guild_manager.text_channel, `Added ${song_requests.length} songs from playlist ${args[0]} to the queue`, -1)
+            }
+            // Single song was added
+            else {
+                sendMessage(guild_manager.text_channel, `Added \"${song_requests[0].title}\" : ${song_requests[0].url} - ${format_duration(song_requests[0].duration)} to queue`, -1)
+            }
         }     
     }
 };
-
-const video_player = async (guild, song) => {
-    const song_queue = server_map.get(guild.id);
-
-    if (!song){
-        song_queue.voice_channel.leave();
-        server_map.delete(guild.id);
-        return;
-    }
-
-    const stream = ytdl(song.url, {filter:'audioonly'});
-    song_queue.connection.playStream(stream, {seek :0, volume:0.5}).on('finish', () => {
-        song_queue.songs.shift();
-        video_player(guild, song_queue.songs[0]);
-    });
-    await song_queue.text_channel.send(`now playing ${song.title}`)
-}
