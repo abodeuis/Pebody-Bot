@@ -19,7 +19,8 @@ const jermaSounds = new Map([
     ["e", "ee.mp3"],
     ["E", "ee_alt.mp3"],
     ["g", "gas.mp3"],
-    ["h", "whathappend.mp3"],
+    ["G", "giantspider.mp3"],
+    ["h", "whathappened.mp3"],
     ["i", "urAe.mp3"],
     ["j", "aj.mp3"],
     ["l", "aHHHHhwaheha.mp3"],
@@ -35,17 +36,20 @@ const jermaSounds = new Map([
     ["u", "ultra.mp3"],
     ["w", "ws.mp3"],
     ["W", "ws_alt.mp3"],
-    ["y", "ayayaya.mp3"]
+    ["y", "ayayaya.mp3"],
+    ["Y", "you_missed.mp3"]
 ]);
 
 module.exports = {
     name : 'jerma',
     desc : 'Plays jerma sounds',
-    help : 'Replies with the any text after the command.\nExample usage \`{prefix}echo This is the text I want pebody to say\`', // Replace prefix later
+    help : 'Plays jerma sounds', // Replace prefix later
     execute(message) {
         const args = message.content.slice(prefix.length).trim().split(' ')
   	    const msg_command = args.shift() // Trim the command from the reply text 
 	    
+        sendMessage(message.channel, `Jerma Soundboard is undergoing maintence :(`,-1);
+        /*
         guild_manager = server_map.get(message.guild.id);
         // Construct manager if it doesn't exist yet
         if (!guild_manager){
@@ -61,5 +65,6 @@ module.exports = {
                 }
             }
         }
+        */
     }
 };

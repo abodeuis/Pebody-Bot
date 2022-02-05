@@ -6,7 +6,8 @@ const ytdlexec = require('youtube-dl-exec');
 const {createAudioPlayer, createAudioResource, joinVoiceChannel, VoiceConnectionStatus, entersState, AudioPlayerStatus} = require('@discordjs/voice');
 // Internal Files
 const sendMessage = require('./send-message')
-const { format_duration } = require('./utilities.js')
+const { format_duration } = require('./utilities.js');
+const { waitForDebugger } = require('inspector');
 
 class guildManager {
     constructor(message){
@@ -72,10 +73,10 @@ class guildManager {
         }
 
         // Setup the player to play to this connection
-        this.connection.subscribe(this.player)
+        this.connection.subscribe(this.player);
 
         this.player.on('error', error => {
-            console.log(`Error at ${this.current_audio.playbackDuration}`)
+            console.log(`Error at ${this.current_audio.playbackDuration}`);
             console.log(`Error: ${error.message} with resource`);
             console.log(error.resource)
             this.song_queue[0].seek = this.current_audio.playbackDuration;
@@ -86,14 +87,14 @@ class guildManager {
     async play_songs(){
         // Remove the Last now playing msg
         this.clearNowPlayingMsg();
-
+        
         // Song queue is done
         if (!this.song_queue[0]){
             if (this.connection){
                 this.connection.destroy();
                 this.connection = null;
             }
-            sendMessage(this.text_channel,`Done playing queue`)
+            sendMessage(this.text_channel,`Done playing queue`);
             return;
         }
 
@@ -108,17 +109,20 @@ class guildManager {
         }
         else {
             this.current_audio = createAudioResource(this.song_queue[0].title);
-        }   
+        }
         
         //console.log(`Trying to seek to ${format_duration(this.song_queue[0].seek)}`)
         
         this.current_audio.playStream.on('finish', () => {
             this.song_queue.shift();
             this.current_audio = null;
-            this.play_songs();          
+            this.play_songs(); 
         });
+        
         //this.setNowPlayingMsg();
+        //if (this.player.state.status =! 'playing'){
         this.player.play(this.current_audio);
+        //} 
     }
 
     setNowPlayingMsg(){
