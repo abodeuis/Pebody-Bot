@@ -48,8 +48,8 @@ module.exports = {
         const args = message.content.slice(prefix.length).trim().split(' ')
   	    const msg_command = args.shift() // Trim the command from the reply text 
 	    
-        sendMessage(message.channel, `Jerma Soundboard is undergoing maintence :(`,-1);
-        /*
+        //sendMessage(message.channel, `Jerma Soundboard is undergoing maintence :(`,-1);
+        
         guild_manager = server_map.get(message.guild.id);
         // Construct manager if it doesn't exist yet
         if (!guild_manager){
@@ -65,6 +65,6 @@ module.exports = {
                 }
             }
         }
-        */
+        
     }
 };

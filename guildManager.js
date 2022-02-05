@@ -86,43 +86,55 @@ class guildManager {
 
     async play_songs(){
         // Remove the Last now playing msg
-        this.clearNowPlayingMsg();
-        
-        // Song queue is done
-        if (!this.song_queue[0]){
-            if (this.connection){
-                this.connection.destroy();
-                this.connection = null;
-            }
-            sendMessage(this.text_channel,`Done playing queue`);
-            return;
-        }
+        if (this.player.state.status === 'idle' || this.player.state.status === 'autopaused'){
+            this.clearNowPlayingMsg();
+            this.current_audio = null;
 
-        // Download the Song to cache
-        //const stream = ytdl(this.song_queue[0].url, {filter:'audioonly', quality: 'highestaudio'});
-        if (this.song_queue[0].url){
-            const stream = ytdlexec.exec(this.song_queue[0].url, {'postprocessor-args': `-ss ${format_duration(this.song_queue[0].seek)}`, o:'-',q:'',f:'bestaudio[ext=webm+acodec=opus+asr=48000]/bestaudio',r: '100K',}, {stdio: ['ignore', 'pipe', 'ignore']});
-            stream.on("error", (err) => {
-                console.log("ytdl error\n", err);
-            });
-            this.current_audio = createAudioResource(stream.stdout, {seek: Number(this.song_queue[0].seek), volume: this.volume})
+            // Song queue is done
+            if (!this.song_queue[0]){
+                if (this.connection){
+                    this.connection.destroy();
+                    this.connection = null;
+                }
+                sendMessage(this.text_channel,`Done playing queue`);
+                return;
+            }
+
+            // Download the Song to cache
+            //const stream = ytdl(this.song_queue[0].url, {filter:'audioonly', quality: 'highestaudio'});
+            if (this.song_queue[0].url){
+                const stream = ytdlexec.exec(this.song_queue[0].url, {'postprocessor-args': `-ss ${format_duration(this.song_queue[0].seek)}`, o:'-',q:'',f:'bestaudio[ext=webm+acodec=opus+asr=48000]/bestaudio',r: '100K',}, {stdio: ['ignore', 'pipe', 'ignore']});
+                stream.on("error", (err) => {
+                    console.log("ytdl error\n", err);
+                });
+                this.current_audio = createAudioResource(stream.stdout, {seek: Number(this.song_queue[0].seek), volume: this.volume})
+            }
+            else {
+                this.current_audio = createAudioResource(this.song_queue[0].title);
+            }
+
+            //this.setNowPlayingMsg();
+            this.player.play(this.current_audio);
+            setTimeout(() => {
+                this.song_queue.shift();
+                this.play_songs();
+            }, 100)
         }
         else {
-            this.current_audio = createAudioResource(this.song_queue[0].title);
+            setTimeout(() => {
+                this.play_songs();
+            }, 50)
         }
-        
+    
         //console.log(`Trying to seek to ${format_duration(this.song_queue[0].seek)}`)
         
+        /*
+        // Old callback method didn't work right for some reason
         this.current_audio.playStream.on('finish', () => {
             this.song_queue.shift();
             this.current_audio = null;
             this.play_songs(); 
-        });
-        
-        //this.setNowPlayingMsg();
-        //if (this.player.state.status =! 'playing'){
-        this.player.play(this.current_audio);
-        //} 
+        });*/
     }
 
     setNowPlayingMsg(){
