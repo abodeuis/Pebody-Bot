@@ -3,7 +3,7 @@ const sendMessage = require('../send-message')
 const {	prefix, } = require('../config.json');
 const guildsMap = require('../guildsMap.js');
 const guildManager = require('../guildManager.js');
-const { join } = require('path');
+const path = require('path');
 
 // Load global variables
 const server_map = guildsMap.Singleton.getInstance()
@@ -39,11 +39,23 @@ const jermaSounds = new Map([
     ["y", "ayayaya.mp3"],
     ["Y", "you_missed.mp3"]
 ]);
-
+helpstr = "Available Sounds : \n";
+i = 1;
+for (let [key, file] of jermaSounds){
+    soundHelp = `\'${key}\' : \"${path.parse(file).name}\"`
+    for (j=soundHelp.length; j<25; j++){
+        soundHelp += "  "
+    }
+    helpstr += soundHelp;
+    if ((i % 3) == 0){
+        helpstr += "\n";
+    }
+    i += 1;
+}
 module.exports = {
     name : 'jerma',
     desc : 'Plays jerma sounds',
-    help : 'Plays jerma sounds', // Replace prefix later
+    help : helpstr, // Replace prefix later
     execute(message) {
         const args = message.content.slice(prefix.length).trim().split(' ')
   	    const msg_command = args.shift() // Trim the command from the reply text 
@@ -61,7 +73,7 @@ module.exports = {
         for (let str of args){
             for (let c of str){
                 if (jermaSounds.has(c)){
-                    guild_manager.addToQueue({title : (join(soundsPath, jermaSounds.get(c)))});
+                    guild_manager.addToQueue({title : (path.join(soundsPath, jermaSounds.get(c)))});
                 }
             }
         }
