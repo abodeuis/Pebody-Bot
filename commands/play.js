@@ -93,35 +93,20 @@ module.exports = {
             guild_manager = new guildManager(message);
             server_map.set(message.guild.id, guild_manager);
         }
+        
         // Add songs to queue
         for (let i in song_requests){
             console.log(`\tAdding ${song_requests[i].title} to queue`);
-            guild_manager.song_queue.push(song_requests[i])
+            guild_manager.addToQueue(song_requests[i])
         }
-
-        // ##### Start playback of the song queue #####
-        // Connect to channel if its not connected
-        if (guild_manager.connection === null){
-            guild_manager.connectToChannel(message.member.voice.channel);
+        
+        // Playlist was added
+        if (song_requests.length > 1){
+            sendMessage(guild_manager.text_channel, `Added ${song_requests.length} songs from playlist ${args[0]} to the queue`, -1)
         }
-        // Tell the player to start playback if its not active
-        if (guild_manager.player.state.status === 'idle' || guild_manager.player.state.status === 'autopaused'){
-            guild_manager.play_songs();
-            // If more then one song is added also send the added to queue msg
-            if (song_requests.length > 1){
-                sendMessage(guild_manager.text_channel, `Added an additional ${song_requests.length} songs from playlist ${args[0]} to the queue`, -1)
-            }
-        }
-        // Send the added to queue msg if the player is already active
+        // Single song was added
         else {
-            // Playlist was added
-            if (song_requests.length > 1){
-                sendMessage(guild_manager.text_channel, `Added ${song_requests.length} songs from playlist ${args[0]} to the queue`, -1)
-            }
-            // Single song was added
-            else {
-                sendMessage(guild_manager.text_channel, `Added \"${song_requests[0].title}\" : ${song_requests[0].url} - ${format_duration(song_requests[0].duration)} to queue`, -1)
-            }
-        }     
+            sendMessage(guild_manager.text_channel, `Added \"${song_requests[0].title}\" : ${song_requests[0].url} - ${format_duration(song_requests[0].duration)} to queue`, -1)
+        }
     }
 };

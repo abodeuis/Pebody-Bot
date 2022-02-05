@@ -2,7 +2,7 @@
 // External Package Requirements
 const fs = require('fs');
 const ytdl = require('ytdl-core');
-const ytdlexec = require('youtube-dl-exec').raw;
+const ytdlexec = require('youtube-dl-exec');
 const {createAudioPlayer, createAudioResource, joinVoiceChannel, VoiceConnectionStatus, entersState, AudioPlayerStatus} = require('@discordjs/voice');
 // Internal Files
 const sendMessage = require('./send-message')
@@ -21,6 +21,20 @@ class guildManager {
         this.current_audio = null;
         this.volume = 0.5;
         this.song_queue = [];
+    }
+
+    async addToQueue(resource){
+        this.song_queue.push(resource)
+
+        // Connect to channel if its not connected
+        if (this.connection === null){
+            this.connectToChannel(this.voice_channel);
+        }
+
+        // Tell the player to start playback if its not active
+        if (this.player.state.status === 'idle' || this.player.state.status === 'autopaused'){
+            this.play_songs();
+        }
     }
 
     async connectToChannel(channel){
@@ -85,19 +99,25 @@ class guildManager {
 
         // Download the Song to cache
         //const stream = ytdl(this.song_queue[0].url, {filter:'audioonly', quality: 'highestaudio'});
-        const stream = ytdlexec(this.song_queue[0].url, {o:'-',q:'',f:'bestaudio[ext=webm+acodec=opus+asr=48000]/bestaudio',r: '100K',}, {stdio: ['ignore', 'pipe', 'ignore']})
-        stream.on("error", (err) => {
-            console.log("ytdl error\n", err);
-        });
+        if (this.song_queue[0].url){
+            const stream = ytdlexec.exec(this.song_queue[0].url, {'postprocessor-args': `-ss ${format_duration(this.song_queue[0].seek)}`, o:'-',q:'',f:'bestaudio[ext=webm+acodec=opus+asr=48000]/bestaudio',r: '100K',}, {stdio: ['ignore', 'pipe', 'ignore']});
+            stream.on("error", (err) => {
+                console.log("ytdl error\n", err);
+            });
+            this.current_audio = createAudioResource(stream.stdout, {seek: Number(this.song_queue[0].seek), volume: this.volume})
+        }
+        else {
+            this.current_audio = createAudioResource(this.song_queue[0].title);
+        }   
         
         //console.log(`Trying to seek to ${format_duration(this.song_queue[0].seek)}`)
-        this.current_audio = createAudioResource(stream.stdout, {seek: Number(this.song_queue[0].seek), volume: this.volume})
+        
         this.current_audio.playStream.on('finish', () => {
             this.song_queue.shift();
             this.current_audio = null;
             this.play_songs();          
         });
-        this.setNowPlayingMsg();
+        //this.setNowPlayingMsg();
         this.player.play(this.current_audio);
     }
 

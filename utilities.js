@@ -15,6 +15,7 @@ function timestampToSec(timestring){
 	var seconds = 0;
 	if (peices > 3){
 		console.log(`To many args in timestamp`)
+		return 0;
 	} else if (peices.length == 3){
 		hours = Number(peices[0])
 		minutes = Number(peices[1]);
